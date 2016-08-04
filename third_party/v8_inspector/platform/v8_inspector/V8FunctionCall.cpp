@@ -81,10 +81,6 @@ v8::Local<v8::Value> V8FunctionCall::call(bool& hadException, bool reportExcepti
 
 v8::Local<v8::Value> V8FunctionCall::callWithoutExceptionHandling()
 {
-    // TODO(dgozman): get rid of this check.
-    if (!m_inspector->client()->isExecutionAllowed())
-        return v8::Local<v8::Value>();
-
     v8::Local<v8::Object> thisObject = v8::Local<v8::Object>::Cast(m_value);
     v8::Local<v8::Value> value;
     if (!thisObject->Get(m_context, m_name).ToLocal(&value))
@@ -100,12 +96,16 @@ v8::Local<v8::Value> V8FunctionCall::callWithoutExceptionHandling()
     }
 
     int contextGroupId = V8Debugger::getGroupId(m_context);
-    if (contextGroupId)
-        m_inspector->client()->muteWarningsAndDeprecations(contextGroupId);
+    if (contextGroupId) {
+        m_inspector->client()->muteMetrics(contextGroupId);
+        m_inspector->muteExceptions(contextGroupId);
+    }
     v8::MicrotasksScope microtasksScope(m_context->GetIsolate(), v8::MicrotasksScope::kDoNotRunMicrotasks);
     v8::MaybeLocal<v8::Value> maybeResult = function->Call(m_context, thisObject, m_arguments.size(), info.get());
-    if (contextGroupId)
-        m_inspector->client()->unmuteWarningsAndDeprecations(contextGroupId);
+    if (contextGroupId) {
+        m_inspector->client()->unmuteMetrics(contextGroupId);
+        m_inspector->unmuteExceptions(contextGroupId);
+    }
 
     v8::Local<v8::Value> result;
     if (!maybeResult.ToLocal(&result))

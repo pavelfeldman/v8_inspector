@@ -21,13 +21,12 @@ public:
     virtual ~V8InspectorClient() { }
     virtual void runMessageLoopOnPause(int contextGroupId) = 0;
     virtual void quitMessageLoopOnPause() = 0;
-    virtual void muteWarningsAndDeprecations(int contextGroupId) = 0;
-    virtual void unmuteWarningsAndDeprecations(int contextGroupId) = 0;
+    virtual void muteMetrics(int contextGroupId) = 0;
+    virtual void unmuteMetrics(int contextGroupId) = 0;
     virtual void beginUserGesture() = 0;
     virtual void endUserGesture() = 0;
     virtual String16 valueSubtype(v8::Local<v8::Value>) = 0;
     virtual bool formatAccessorsAsProperties(v8::Local<v8::Value>) = 0;
-    virtual bool isExecutionAllowed() = 0;
     virtual double currentTimeMS() = 0;
     virtual v8::Local<v8::Context> ensureDefaultContextInGroup(int contextGroupId) = 0;
     virtual bool isInspectableHeapObject(v8::Local<v8::Object>) = 0;
@@ -35,6 +34,7 @@ public:
     virtual void endEnsureAllContextsInGroup(int contextGroupId) = 0;
     // TODO(dgozman): this was added to support service worker shadow page. We should not connect at all.
     virtual bool canExecuteScripts(int contextGroupId) = 0;
+    virtual void resumeStartup(int contextGroupId) = 0;
 
     virtual void installAdditionalCommandLineAPI(v8::Local<v8::Context>, v8::Local<v8::Object>) = 0;
 

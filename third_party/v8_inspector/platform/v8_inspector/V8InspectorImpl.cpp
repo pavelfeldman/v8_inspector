@@ -79,10 +79,6 @@ V8RuntimeAgentImpl* V8InspectorImpl::enabledRuntimeAgentForGroup(int contextGrou
 
 v8::MaybeLocal<v8::Value> V8InspectorImpl::runCompiledScript(v8::Local<v8::Context> context, v8::Local<v8::Script> script)
 {
-    // TODO(dgozman): get rid of this check.
-    if (!m_client->isExecutionAllowed())
-        return v8::MaybeLocal<v8::Value>();
-
     v8::MicrotasksScope microtasksScope(m_isolate, v8::MicrotasksScope::kRunMicrotasks);
     int groupId = V8Debugger::getGroupId(context);
     if (V8DebuggerAgentImpl* agent = enabledDebuggerAgentForGroup(groupId))
@@ -96,10 +92,6 @@ v8::MaybeLocal<v8::Value> V8InspectorImpl::runCompiledScript(v8::Local<v8::Conte
 
 v8::MaybeLocal<v8::Value> V8InspectorImpl::callFunction(v8::Local<v8::Function> function, v8::Local<v8::Context> context, v8::Local<v8::Value> receiver, int argc, v8::Local<v8::Value> info[])
 {
-    // TODO(dgozman): get rid of this check.
-    if (!m_client->isExecutionAllowed())
-        return v8::MaybeLocal<v8::Value>();
-
     v8::MicrotasksScope microtasksScope(m_isolate, v8::MicrotasksScope::kRunMicrotasks);
     int groupId = V8Debugger::getGroupId(context);
     if (V8DebuggerAgentImpl* agent = enabledDebuggerAgentForGroup(groupId))
@@ -151,6 +143,16 @@ void V8InspectorImpl::disableStackCapturingIfNeeded()
         V8StackTraceImpl::setCaptureStackTraceForUncaughtExceptions(m_isolate, false);
 }
 
+void V8InspectorImpl::muteExceptions(int contextGroupId)
+{
+    m_muteExceptionsMap[contextGroupId]++;
+}
+
+void V8InspectorImpl::unmuteExceptions(int contextGroupId)
+{
+    m_muteExceptionsMap[contextGroupId]--;
+}
+
 V8ConsoleMessageStorage* V8InspectorImpl::ensureConsoleMessageStorage(int contextGroupId)
 {
     ConsoleStorageMap::iterator storageIt = m_consoleStorageMap.find(contextGroupId);
@@ -164,10 +166,10 @@ std::unique_ptr<V8StackTrace> V8InspectorImpl::createStackTrace(v8::Local<v8::St
     return m_debugger->createStackTrace(stackTrace);
 }
 
-std::unique_ptr<V8InspectorSession> V8InspectorImpl::connect(int contextGroupId, protocol::FrontendChannel* channel, V8InspectorSessionClient* client, const String16* state)
+std::unique_ptr<V8InspectorSession> V8InspectorImpl::connect(int contextGroupId, protocol::FrontendChannel* channel, const String16* state)
 {
     DCHECK(m_sessions.find(contextGroupId) == m_sessions.cend());
-    std::unique_ptr<V8InspectorSessionImpl> session = V8InspectorSessionImpl::create(this, contextGroupId, channel, client, state);
+    std::unique_ptr<V8InspectorSessionImpl> session = V8InspectorSessionImpl::create(this, contextGroupId, channel, state);
     m_sessions[contextGroupId] = session.get();
     return std::move(session);
 }
@@ -180,6 +182,9 @@ void V8InspectorImpl::disconnect(V8InspectorSessionImpl* session)
 
 InspectedContext* V8InspectorImpl::getContext(int groupId, int contextId) const
 {
+    if (!groupId || !contextId)
+        return nullptr;
+
     ContextsByGroupMap::const_iterator contextGroupIt = m_contexts.find(groupId);
     if (contextGroupIt == m_contexts.end())
         return nullptr;
@@ -231,6 +236,7 @@ void V8InspectorImpl::contextDestroyed(v8::Local<v8::Context> context)
 void V8InspectorImpl::resetContextGroup(int contextGroupId)
 {
     m_consoleStorageMap.erase(contextGroupId);
+    m_muteExceptionsMap.erase(contextGroupId);
     SessionMap::iterator session = m_sessions.find(contextGroupId);
     if (session != m_sessions.end())
         session->second->reset();
@@ -262,7 +268,7 @@ void V8InspectorImpl::idleFinished()
 unsigned V8InspectorImpl::exceptionThrown(v8::Local<v8::Context> context, const String16& message, v8::Local<v8::Value> exception, const String16& detailedMessage, const String16& url, unsigned lineNumber, unsigned columnNumber, std::unique_ptr<V8StackTrace> stackTrace, int scriptId)
 {
     int contextGroupId = V8Debugger::getGroupId(context);
-    if (!contextGroupId)
+    if (!contextGroupId || m_muteExceptionsMap[contextGroupId])
         return 0;
     std::unique_ptr<V8StackTraceImpl> stackTraceImpl = wrapUnique(static_cast<V8StackTraceImpl*>(stackTrace.release()));
     unsigned exceptionId = ++m_lastExceptionId;

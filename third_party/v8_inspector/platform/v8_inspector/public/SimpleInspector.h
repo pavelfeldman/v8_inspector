@@ -8,7 +8,6 @@
 #include "platform/inspector_protocol/Platform.h"
 #include "platform/v8_inspector/public/V8InspectorClient.h"
 #include "platform/v8_inspector/public/V8InspectorSession.h"
-#include "platform/v8_inspector/public/V8InspectorSessionClient.h"
 
 #include <v8.h>
 
@@ -24,7 +23,7 @@ class V8Inspector;
 class V8HeapProfilerAgent;
 class V8ProfilerAgent;
 
-class SimpleInspector : public V8InspectorClient, V8InspectorSessionClient {
+class SimpleInspector : public V8InspectorClient {
 public:
     SimpleInspector(v8::Isolate*, v8::Local<v8::Context>);
     ~SimpleInspector();
@@ -38,11 +37,10 @@ public:
 private:
     String16 valueSubtype(v8::Local<v8::Value>) override;
     bool formatAccessorsAsProperties(v8::Local<v8::Value>) override;
-    void muteWarningsAndDeprecations(int) override { }
-    void unmuteWarningsAndDeprecations(int) override { }
+    void muteMetrics(int) override { }
+    void unmuteMetrics(int) override { }
     double currentTimeMS() override { return 0; };
 
-    bool isExecutionAllowed() override;
     v8::Local<v8::Context> ensureDefaultContextInGroup(int contextGroupId) override;
     void beginEnsureAllContextsInGroup(int contextGroupId) override { }
     void endEnsureAllContextsInGroup(int contextGroupId) override { }
@@ -60,10 +58,8 @@ private:
     void installAdditionalCommandLineAPI(v8::Local<v8::Context>, v8::Local<v8::Object>) override { }
     void startRepeatingTimer(double, TimerCallback, void* data) override { }
     void cancelTimer(void* data) override { }
-
-    // V8InspectorSessionClient
-    void resumeStartup() override { }
     bool canExecuteScripts(int) override { return true; }
+    void resumeStartup(int) override { }
 
     std::unique_ptr<V8Inspector> m_inspector;
     std::unique_ptr<V8InspectorSession> m_session;
