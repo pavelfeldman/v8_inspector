@@ -198,7 +198,6 @@
                 ],
                 "returns": [
                     { "name": "result", "$ref": "RemoteObject", "description": "Evaluation result." },
-                    { "name": "wasThrown", "type": "boolean", "optional": true, "description": "True if the result was thrown during the evaluation." },
                     { "name": "exceptionDetails", "$ref": "ExceptionDetails", "optional": true, "experimental": true, "description": "Exception details."}
                 ],
                 "description": "Evaluates expression on global object."
@@ -214,7 +213,6 @@
                 ],
                 "returns": [
                     { "name": "result", "$ref": "RemoteObject", "description": "Promise result. Will contain rejected value if promise was rejected." },
-                    { "name": "wasThrown", "type": "boolean", "optional": true, "description": "True if the promise was rejected." },
                     { "name": "exceptionDetails", "$ref": "ExceptionDetails", "optional": true, "description": "Exception details if stack strace is available."}
                 ],
                 "description": "Add handler to promise with given promise object id."
@@ -234,7 +232,6 @@
                 ],
                 "returns": [
                     { "name": "result", "$ref": "RemoteObject", "description": "Call result." },
-                    { "name": "wasThrown", "type": "boolean", "optional": true, "description": "True if the result was thrown during the evaluation." },
                     { "name": "exceptionDetails", "$ref": "ExceptionDetails", "optional": true, "experimental": true, "description": "Exception details."}
                 ],
                 "description": "Calls function with given declaration on the given object. Object group of the result is inherited from the target object."
@@ -328,7 +325,6 @@
                 ],
                 "returns": [
                     { "name": "result", "$ref": "RemoteObject", "description": "Run result." },
-                    { "name": "wasThrown", "type": "boolean", "optional": true, "description": "True if the result was thrown during the execution." },
                     { "name": "exceptionDetails", "$ref": "ExceptionDetails", "optional": true, "description": "Exception details."}
                 ],
                 "description": "Runs script with given id in a given context."
@@ -624,7 +620,6 @@
                 ],
                 "returns": [
                     { "name": "result", "$ref": "Runtime.RemoteObject", "description": "Object wrapper for the evaluation result." },
-                    { "name": "wasThrown", "type": "boolean", "optional": true, "description": "True if the result was thrown during the evaluation." },
                     { "name": "exceptionDetails", "$ref": "Runtime.ExceptionDetails", "optional": true, "experimental": true, "description": "Exception details."}
                 ],
                 "description": "Evaluates expression on a given call frame."
@@ -682,8 +677,7 @@
                     { "name": "isInternalScript", "type": "boolean", "optional": true, "description": "Determines whether this script is an internal script.", "experimental": true },
                     { "name": "isLiveEdit", "type": "boolean", "optional": true, "description": "True, if this script is generated as a result of the live edit operation.", "experimental": true },
                     { "name": "sourceMapURL", "type": "string", "optional": true, "description": "URL of source map associated with script (if any)." },
-                    { "name": "hasSourceURL", "type": "boolean", "optional": true, "description": "True, if this script has sourceURL.", "experimental": true },
-                    { "name": "deprecatedCommentWasUsed", "type": "boolean", "optional": true, "experimental": true, "description": "True, if '//@ sourceURL' or '//@ sourceMappingURL' was used."}
+                    { "name": "hasSourceURL", "type": "boolean", "optional": true, "description": "True, if this script has sourceURL.", "experimental": true }
                 ],
                 "description": "Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger."
             },
@@ -701,8 +695,7 @@
                     { "name": "executionContextAuxData", "type": "object", "optional": true, "description": "Embedder-specific auxiliary data.", "experimental": true },
                     { "name": "isInternalScript", "type": "boolean", "optional": true, "description": "Determines whether this script is an internal script.", "experimental": true },
                     { "name": "sourceMapURL", "type": "string", "optional": true, "description": "URL of source map associated with script (if any)." },
-                    { "name": "hasSourceURL", "type": "boolean", "optional": true, "description": "True, if this script has sourceURL.", "experimental": true },
-                    { "name": "deprecatedCommentWasUsed", "type": "boolean", "optional": true, "experimental": true, "description": "True, if '//@ sourceURL' or '//@ sourceMappingURL' was used."}
+                    { "name": "hasSourceURL", "type": "boolean", "optional": true, "description": "True, if this script has sourceURL.", "experimental": true }
                 ],
                 "description": "Fired when virtual machine fails to parse the script."
             },
