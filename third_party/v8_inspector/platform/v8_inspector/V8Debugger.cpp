@@ -95,12 +95,12 @@ int V8Debugger::contextId(v8::Local<v8::Context> context)
     if (dataString.isEmpty())
         return 0;
     size_t commaPos = dataString.find(",");
-    if (commaPos == kNotFound)
+    if (commaPos == String16::kNotFound)
         return 0;
     size_t commaPos2 = dataString.find(",", commaPos + 1);
-    if (commaPos2 == kNotFound)
+    if (commaPos2 == String16::kNotFound)
         return 0;
-    return dataString.substring(commaPos + 1, commaPos2 - commaPos - 1).toInt();
+    return dataString.substring(commaPos + 1, commaPos2 - commaPos - 1).toInteger();
 }
 
 // static
@@ -113,9 +113,9 @@ int V8Debugger::getGroupId(v8::Local<v8::Context> context)
     if (dataString.isEmpty())
         return 0;
     size_t commaPos = dataString.find(",");
-    if (commaPos == kNotFound)
+    if (commaPos == String16::kNotFound)
         return 0;
-    return dataString.substring(0, commaPos).toInt();
+    return dataString.substring(0, commaPos).toInteger();
 }
 
 void V8Debugger::getCompiledScripts(int contextGroupId, std::vector<std::unique_ptr<V8DebuggerScript>>& result)
@@ -508,6 +508,8 @@ void V8Debugger::handleV8DebugEvent(const v8::Debug::EventDetails& eventDetails)
             v8::Context::Scope contextScope(debuggerContext());
             v8::Local<v8::Value> argv[] = { eventDetails.GetEventData() };
             v8::Local<v8::Value> value = callDebuggerMethod("getAfterCompileScript", 1, argv).ToLocalChecked();
+            if (value->IsNull())
+                return;
             DCHECK(value->IsObject());
             v8::Local<v8::Object> scriptObject = v8::Local<v8::Object>::Cast(value);
             agent->didParseSource(wrapUnique(new V8DebuggerScript(m_isolate, scriptObject, inLiveEditScope)), event == v8::AfterCompile);

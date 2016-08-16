@@ -4,8 +4,6 @@
 
 #include "platform/v8_inspector/V8StackTraceImpl.h"
 
-#include "platform/inspector_protocol/Platform.h"
-#include "platform/inspector_protocol/String16.h"
 #include "platform/v8_inspector/V8Debugger.h"
 #include "platform/v8_inspector/V8StringUtil.h"
 
@@ -256,9 +254,9 @@ String16 V8StackTraceImpl::toString() const
         stackTrace.append(" (");
         stackTrace.append(frame.sourceURL());
         stackTrace.append(':');
-        stackTrace.appendNumber(frame.lineNumber());
+        stackTrace.append(String16::fromInteger(frame.lineNumber()));
         stackTrace.append(':');
-        stackTrace.appendNumber(frame.columnNumber());
+        stackTrace.append(String16::fromInteger(frame.columnNumber()));
         stackTrace.append(')');
     }
     return stackTrace.toString();

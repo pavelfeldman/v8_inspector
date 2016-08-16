@@ -4,7 +4,6 @@
 
 #include "platform/v8_inspector/V8InspectorSessionImpl.h"
 
-#include "platform/inspector_protocol/Parser.h"
 #include "platform/v8_inspector/InjectedScript.h"
 #include "platform/v8_inspector/InspectedContext.h"
 #include "platform/v8_inspector/RemoteObjectId.h"
@@ -24,11 +23,11 @@ namespace blink {
 // static
 bool V8InspectorSession::canDispatchMethod(const String16& method)
 {
-    return method.startWith(protocol::Runtime::Metainfo::commandPrefix)
-        || method.startWith(protocol::Debugger::Metainfo::commandPrefix)
-        || method.startWith(protocol::Profiler::Metainfo::commandPrefix)
-        || method.startWith(protocol::HeapProfiler::Metainfo::commandPrefix)
-        || method.startWith(protocol::Console::Metainfo::commandPrefix);
+    return method.startsWith(protocol::Runtime::Metainfo::commandPrefix)
+        || method.startsWith(protocol::Debugger::Metainfo::commandPrefix)
+        || method.startsWith(protocol::Profiler::Metainfo::commandPrefix)
+        || method.startsWith(protocol::HeapProfiler::Metainfo::commandPrefix)
+        || method.startsWith(protocol::Console::Metainfo::commandPrefix);
 }
 
 std::unique_ptr<V8InspectorSessionImpl> V8InspectorSessionImpl::create(V8InspectorImpl* inspector, int contextGroupId, protocol::FrontendChannel* channel, const String16* state)
