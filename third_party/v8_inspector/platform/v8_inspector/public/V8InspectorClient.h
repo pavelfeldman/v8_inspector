@@ -9,7 +9,7 @@
 
 #include <v8.h>
 
-namespace blink {
+namespace v8_inspector {
 
 class V8StackTrace;
 
@@ -21,7 +21,7 @@ public:
 
     virtual void runMessageLoopOnPause(int contextGroupId) { }
     virtual void quitMessageLoopOnPause() { }
-    virtual void resumeStartup(int contextGroupId) { }
+    virtual void runIfWaitingForDebugger(int contextGroupId) { }
 
     virtual void muteMetrics(int contextGroupId) { }
     virtual void unmuteMetrics(int contextGroupId) { }
@@ -53,7 +53,7 @@ public:
     virtual bool canExecuteScripts(int contextGroupId) { return true; }
 };
 
-} // namespace blink
+} // namespace v8_inspector
 
 
 #endif // V8InspectorClient_h

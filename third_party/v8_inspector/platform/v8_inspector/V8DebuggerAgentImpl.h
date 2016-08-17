@@ -11,7 +11,7 @@
 
 #include <vector>
 
-namespace blink {
+namespace v8_inspector {
 
 struct ScriptBreakpoint;
 class JavaScriptCallFrame;
@@ -23,11 +23,8 @@ class V8InspectorSessionImpl;
 class V8Regex;
 class V8StackTraceImpl;
 
-namespace protocol {
-class DictionaryValue;
-}
-
-using protocol::Maybe;
+namespace protocol = blink::protocol;
+using blink::protocol::Maybe;
 
 class V8DebuggerAgentImpl : public protocol::Debugger::Backend {
     PROTOCOL_DISALLOW_COPY(V8DebuggerAgentImpl);
@@ -54,7 +51,7 @@ public:
     void enable(ErrorString*) override;
     void disable(ErrorString*) override;
     void setBreakpointsActive(ErrorString*, bool active) override;
-    void setSkipAllPauses(ErrorString*, bool skipped) override;
+    void setSkipAllPauses(ErrorString*, bool skip) override;
     void setBreakpointByUrl(ErrorString*,
         int lineNumber,
         const Maybe<String16>& optionalURL,
@@ -80,7 +77,7 @@ public:
     void setScriptSource(ErrorString*,
         const String16& inScriptId,
         const String16& inScriptSource,
-        const Maybe<bool>& inPreview,
+        const Maybe<bool>& dryRun,
         Maybe<protocol::Array<protocol::Debugger::CallFrame>>* optOutCallFrames,
         Maybe<bool>* optOutStackChanged,
         Maybe<protocol::Runtime::StackTrace>* optOutAsyncStackTrace,
@@ -101,7 +98,7 @@ public:
         const String16& expression,
         const Maybe<String16>& objectGroup,
         const Maybe<bool>& includeCommandLineAPI,
-        const Maybe<bool>& doNotPauseOnExceptionsAndMuteConsole,
+        const Maybe<bool>& silent,
         const Maybe<bool>& returnByValue,
         const Maybe<bool>& generatePreview,
         std::unique_ptr<protocol::Runtime::RemoteObject>* result,
@@ -210,7 +207,6 @@ private:
     protocol::HashMap<String16, std::vector<std::pair<int, int>>> m_blackboxedPositions;
 };
 
-} // namespace blink
-
+} // namespace v8_inspector
 
 #endif // V8DebuggerAgentImpl_h
