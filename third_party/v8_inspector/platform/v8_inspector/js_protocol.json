@@ -143,12 +143,15 @@
                 "experimental": true,
                 "description": "Detailed information about exception (or error) that was thrown during script compilation or execution.",
                 "properties": [
-                    { "name": "text", "type": "string", "description": "Exception text." },
-                    { "name": "scriptId", "$ref": "ScriptId", "description": "Script ID of the exception location." },
+                    { "name": "exceptionId", "type": "integer", "description": "Exception id." },
+                    { "name": "text", "type": "string", "description": "Exception text, which should be used together with exception object when available." },
                     { "name": "lineNumber", "type": "integer", "description": "Line number of the exception location (0-based)." },
                     { "name": "columnNumber", "type": "integer", "description": "Column number of the exception location (0-based)." },
+                    { "name": "scriptId", "$ref": "ScriptId", "optional": true, "description": "Script ID of the exception location." },
                     { "name": "url", "type": "string", "optional": true, "description": "URL of the exception location, to be used when the script was not reported." },
-                    { "name": "stackTrace", "$ref": "StackTrace", "optional": true, "description": "JavaScript stack trace if available." }
+                    { "name": "stackTrace", "$ref": "StackTrace", "optional": true, "description": "JavaScript stack trace if available." },
+                    { "name": "exception", "$ref": "RemoteObject", "optional": true, "description": "Exception object if available." },
+                    { "name": "executionContextId", "$ref": "ExecutionContextId", "optional": true, "description": "Identifier of the context where exception happened." }
                 ]
             },
             {
@@ -353,11 +356,8 @@
                 "name": "exceptionThrown",
                 "description": "Issued when exception was thrown and unhandled.",
                 "parameters": [
-                    { "name": "exceptionId", "type": "integer", "description": "Exception id." },
                     { "name": "timestamp", "$ref": "Timestamp", "description": "Timestamp of the exception." },
-                    { "name": "details", "$ref": "ExceptionDetails" },
-                    { "name": "exception", "$ref": "RemoteObject", "optional": true, "description": "Exception object." },
-                    { "name": "executionContextId", "$ref": "ExecutionContextId", "optional": true, "description": "Identifier of the context where exception happened." }
+                    { "name": "exceptionDetails", "$ref": "ExceptionDetails" }
                 ],
                 "experimental": true
             },
@@ -365,7 +365,7 @@
                 "name": "exceptionRevoked",
                 "description": "Issued when unhandled exception was revoked.",
                 "parameters": [
-                    { "name": "message", "type": "string", "description": "Message describing why exception was revoked." },
+                    { "name": "reason", "type": "string", "description": "Reason describing why exception was revoked." },
                     { "name": "exceptionId", "type": "integer", "description": "The id of revoked exception, as reported in <code>exceptionUnhandled</code>." }
                 ],
                 "experimental": true
@@ -575,7 +575,7 @@
                     { "name": "callFrames", "type": "array", "optional": true, "items": { "$ref": "CallFrame" }, "description": "New stack trace in case editing has happened while VM was stopped." },
                     { "name": "stackChanged", "type": "boolean", "optional": true, "description": "Whether current call stack  was modified after applying the changes.", "experimental": true },
                     { "name": "asyncStackTrace", "$ref": "Runtime.StackTrace", "optional": true, "description": "Async stack trace, if any.", "experimental": true },
-                    { "name": "compileError", "optional": true, "$ref": "Runtime.ExceptionDetails", "description": "Error data if any." }
+                    { "name": "exceptionDetails", "optional": true, "$ref": "Runtime.ExceptionDetails", "description": "Exception details if any." }
                 ],
                 "description": "Edits JavaScript source live."
             },
@@ -777,12 +777,12 @@
                 "type": "object",
                 "description": "CPU Profile node. Holds callsite information, execution statistics and child nodes.",
                 "properties": [
+                    { "name": "id", "type": "integer", "description": "Unique id of the node." },
                     { "name": "callFrame", "$ref": "Runtime.CallFrame", "description": "Function location." },
                     { "name": "hitCount", "type": "integer", "description": "Number of samples where this node was on top of the call stack." },
-                    { "name": "children", "type": "array", "items": { "$ref": "CPUProfileNode" }, "description": "Child nodes." },
-                    { "name": "deoptReason", "type": "string", "description": "The reason of being not optimized. The function may be deoptimized or marked as don't optimize."},
-                    { "name": "id", "type": "integer", "description": "Unique id of the node." },
-                    { "name": "positionTicks", "type": "array", "items": { "$ref": "PositionTickInfo" }, "description": "An array of source position ticks." }
+                    { "name": "children", "type": "array", "items": { "type": "integer" }, "description": "Child node ids." },
+                    { "name": "deoptReason", "type": "string", "experimental": true, "description": "The reason of being not optimized. The function may be deoptimized or marked as don't optimize."},
+                    { "name": "positionTicks", "type": "array", "items": { "$ref": "PositionTickInfo" }, "experimental": true, "description": "An array of source position ticks." }
                 ]
             },
             {
@@ -790,7 +790,7 @@
                 "type": "object",
                 "description": "Profile.",
                 "properties": [
-                    { "name": "head", "$ref": "CPUProfileNode" },
+                    { "name": "nodes", "type": "array", "items": { "$ref": "CPUProfileNode" }, "description": "The list of profile nodes. First item is the root node." },
                     { "name": "startTime", "type": "number", "description": "Profiling start time in seconds." },
                     { "name": "endTime", "type": "number", "description": "Profiling end time in seconds." },
                     { "name": "samples", "optional": true, "type": "array", "items": { "type": "integer" }, "description": "Ids of samples top nodes." },
@@ -800,6 +800,7 @@
             {
                 "id": "PositionTickInfo",
                 "type": "object",
+                "experimental": true,
                 "description": "Specifies a number of samples attributed to a certain source position.",
                 "properties": [
                     { "name": "line", "type": "integer", "description": "Source line number (1-based)." },
@@ -837,7 +838,7 @@
                 "parameters": [
                     { "name": "id", "type": "string" },
                     { "name": "location", "$ref": "Debugger.Location", "description": "Location of console.profile()." },
-                    { "name": "title", "type": "string", "optional": true, "description": "Profile title passed as argument to console.profile()." }
+                    { "name": "title", "type": "string", "optional": true, "description": "Profile title passed as an argument to console.profile()." }
                 ],
                 "description": "Sent when new profile recodring is started using console.profile() call."
             },
@@ -847,7 +848,7 @@
                     { "name": "id", "type": "string" },
                     { "name": "location", "$ref": "Debugger.Location", "description": "Location of console.profileEnd()." },
                     { "name": "profile", "$ref": "CPUProfile" },
-                    { "name": "title", "type": "string", "optional": true, "description": "Profile title passed as argunet to console.profile()." }
+                    { "name": "title", "type": "string", "optional": true, "description": "Profile title passed as an argument to console.profile()." }
                 ]
             }
         ]
